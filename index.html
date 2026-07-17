@@ -1076,12 +1076,12 @@
       </div>
 
       <!-- SMS Link Target inside responsive PWA -->
-      <a href="#" id="sms-trigger-link" class="sms-fallback-btn">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
-        <span>TAP TO TRIGGER SMS FALLBACK</span>
-      </a>
+<a href="javascript:void(0)" onclick="sendSmsFallback()" id="sms-trigger-link" class="sms-fallback-btn">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <span>TAP TO TRIGGER SMS FALLBACK</span>
+</a>
 
       <button class="btn btn-primary" id="stop-alert-btn" style="background:var(--dash-green); font-size: 0.95rem; padding: 12px; margin-top: 5px;">
         DEACTIVATE SECURITY STROBE
@@ -1936,6 +1936,36 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 1500); 
     }
 });
+
+    // --- DYNAMIC SMS FALLBACK TRIGGER ON-CLICK ---
+function sendSmsFallback() {
+    // 1. Screen se live lat and lng uthao jo requestLiveLocation ne nikaale hain
+    var latElement = document.getElementById('gps-lat');
+    var lngElement = document.getElementById('gps-lng');
+    
+    var latVal = latElement ? latElement.innerText.trim() : "";
+    var lngVal = lngElement ? lngElement.innerText.trim() : "";
+    
+    var message = "";
+    
+    // 2. Check karo agar real location load hui hai (not empty, not 0.0)
+    if (latVal && lngVal && latVal !== "" && latVal !== "0.0") {
+        var mapUrl = "https://maps.google.com/?q=" + latVal + "," + lngVal;
+        
+        // Bilingual Message (Hindi + English)
+        message = "HELP! I am in danger. My live location: " + mapUrl + "\n\nबचाओ! मैं मुसीबत में हूँ। मेरी लाइव लोकेशन: " + mapUrl;
+    } else {
+        // Fallback agar GPS access nahi hai to
+        message = "HELP! My mobile GPS is OFF. Please call me immediately!\n\nबचाओ! मेरे मोबाइल का GPS बंद है। कृपया मुझे तुरंत कॉल करें!";
+    }
+    
+    // 3. Emergency Mobile Numbers
+    var contacts = "7067306441,6232465634";
+    
+    // 4. Instant redirect to SMS app with the freshly generated message
+    var smsUrl = "sms:" + contacts + "?body=" + encodeURIComponent(message);
+    window.location.href = smsUrl;
+}
   </script>
 </body>
 </html>
