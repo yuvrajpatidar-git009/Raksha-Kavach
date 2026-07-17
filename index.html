@@ -1938,32 +1938,69 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
     // --- DYNAMIC SMS FALLBACK TRIGGER ON-CLICK ---
+// --- DYNAMIC & SAFE SMS FALLBACK (NO DEFAULT NUMBERS) ---
 function sendSmsFallback() {
-    // 1. Screen se live lat and lng uthao jo requestLiveLocation ne nikaale hain
+    // 1. Screen se live GPS coordinates uthao
     var latElement = document.getElementById('gps-lat');
     var lngElement = document.getElementById('gps-lng');
     
     var latVal = latElement ? latElement.innerText.trim() : "";
     var lngVal = lngElement ? lngElement.innerText.trim() : "";
-    
     var message = "";
     
-    // 2. Check karo agar real location load hui hai (not empty, not 0.0)
+    // 2. Bilingual SMS template set karo (With Google Maps Link)
     if (latVal && lngVal && latVal !== "" && latVal !== "0.0") {
         var mapUrl = "https://maps.google.com/?q=" + latVal + "," + lngVal;
-        
-        // Bilingual Message (Hindi + English)
         message = "HELP! I am in danger. My live location: " + mapUrl + "\n\nबचाओ! मैं मुसीबत में हूँ। मेरी लाइव लोकेशन: " + mapUrl;
     } else {
-        // Fallback agar GPS access nahi hai to
         message = "HELP! My mobile GPS is OFF. Please call me immediately!\n\nबचाओ! मेरे मोबाइल का GPS बंद है। कृपया मुझे तुरंत कॉल करें!";
     }
     
-    // 3. Emergency Mobile Numbers
-    var contacts = "7067306441,6232465634";
+    // 🔍 SCANNER: Ab hum dynamic numbers nikalenge
+    var foundNumbers = [];
     
-    // 4. Instant redirect to SMS app with the freshly generated message
-    var smsUrl = "sms:" + contacts + "?body=" + encodeURIComponent(message);
+    // Step A: Browser ki memory (LocalStorage) ko scan karo
+    for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        var val = localStorage.getItem(key);
+        if (val) {
+            // Kisi bhi text/JSON me se 10 se 12 digits ke numbers nikaalo
+            var matches = val.match(/\b\d{10,12}\b/g);
+            if (matches) {
+                for (var j = 0; j < matches.length; j++) {
+                    foundNumbers.push(matches[j]);
+                }
+            }
+        }
+    }
+    
+    // Step B: Screen ke saare Input Fields ko scan karo (Agar user ne direct screen par type kiya ho)
+    var allInputs = document.querySelectorAll('input');
+    for (var k = 0; k < allInputs.length; k++) {
+        var inputVal = allInputs[k].value.trim();
+        var inputMatches = inputVal.match(/\b\d{10,12}\b/g);
+        if (inputMatches) {
+            for (var l = 0; l < inputMatches.length; l++) {
+                foundNumbers.push(inputMatches[l]);
+            }
+        }
+    }
+    
+    // Ek hi number baar-baar na aaye, isliye duplicates ko remove karo
+    var uniqueNumbers = foundNumbers.filter(function(item, pos) {
+        return foundNumbers.indexOf(item) == pos;
+    });
+    
+    var finalContacts = uniqueNumbers.join(",");
+    
+    // 🚨 🔥 SAFETY SHIELD: Agar user ne koi number enter nahi kiya hai toh alert dikhao
+    if (!finalContacts) {
+        alert("⚠️ कोई आपातकालीन संपर्क नंबर नहीं मिला!\nकृपया पहले ऐप में कम से कम एक मोबाइल नंबर दर्ज करें।\n\nNo emergency contact found! Please add a contact number in the app first.");
+        return; // Code yahin ruk jayega, galat jagah SMS bilkul nahi jayega!
+    }
+    
+    // 3. Sahi number milne par hi SMS App open hogi
+    var smsUrl = "sms:" + finalContacts + "?body=" + encodeURIComponent(message);
     window.location.href = smsUrl;
 }
   </script>
