@@ -1,0 +1,6 @@
+{
+  "name": "Raksha Kavach",
+  "description": "Progressive Web App for women's safety with stealth activation, zero-text UI, voice activation, and offline SMS fallback.",
+  "requestFramePermissions": ["microphone", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

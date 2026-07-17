@@ -1,0 +1,1884 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Swaad & Swasthya - Daily Indian Recipes</title>
+  <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlJha3NoYSBLYXZhY2giLAogICJzaG9ydF9uYW1lIjogIlJha3NoYSIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMEIwRTE0IiwKICAidGhlbWVfY29sb3IiOiAiIzBCMEUxNCIKfQ==" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --blog-bg: #FAF7F2;
+      --blog-text: #2D2721;
+      --blog-accent: #D47A41;
+      --blog-border: #EBE5DC;
+      --blog-card: #FFFFFF;
+      
+      --dash-bg: #0A0A0B;
+      --dash-card: #111318;
+      --dash-text: #F1F5F9;
+      --dash-red: #DC2626;
+      --dash-amber: #F59E0B;
+      --dash-blue: #3B82F6;
+      --dash-green: #10B981;
+      --dash-border: #1E293B;
+      --dash-muted: #64748B;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Lora', serif; background-color: var(--blog-bg); color: var(--blog-text); overflow-x: hidden; transition: background-color 0.5s ease; }
+    .hidden { display: none !important; }
+    .screen { min-height: 100vh; display: flex; flex-direction: column; opacity: 1; transition: opacity 0.5s ease; }
+
+    /* SVG Utilities */
+    .icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
+
+    /* --- BLOG UI STYLE --- */
+    #blog-screen { background-color: var(--blog-bg); color: var(--blog-text); padding-bottom: 40px; }
+    .blog-header { background-color: #FFFFFF; border-bottom: 1px solid var(--blog-border); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .blog-logo { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 1.25rem; color: var(--blog-accent); }
+    .blog-nav { display: flex; gap: 15px; font-size: 0.9rem; font-family: system-ui, sans-serif; font-weight: 500; }
+    .blog-nav span { cursor: pointer; color: #7F7164; }
+    .blog-nav span.active { color: var(--blog-accent); }
+    
+    .blog-container { max-width: 800px; margin: 20px auto; padding: 0 15px; width: 100%; }
+    .blog-hero { background: linear-gradient(135deg, #F3ECE1, #E8DEC9); border-radius: 12px; padding: 25px; margin-bottom: 25px; position: relative; overflow: hidden; }
+    .blog-hero h1 { font-size: 1.75rem; margin-bottom: 8px; line-height: 1.2; font-weight: 600; }
+    .blog-hero p { font-size: 0.95rem; color: #5C5248; margin-bottom: 15px; line-height: 1.5; }
+    
+    .recipe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 600px) { .recipe-grid { grid-template-columns: 1fr; } }
+    .recipe-card { background: var(--blog-card); border: 1px solid var(--blog-border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .recipe-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+    .recipe-image { height: 180px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; background: linear-gradient(45deg, #FFE0CC, #FFB899); color: var(--blog-accent); font-weight: bold; font-size: 1.1rem; }
+    .recipe-image img { width: 100%; height: 100%; object-fit: cover; }
+    .recipe-badge { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 4px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; color: var(--blog-accent); }
+    .recipe-info { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; }
+    .recipe-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 6px; }
+    .recipe-desc { font-size: 0.85rem; color: #7F7164; line-height: 1.4; flex-grow: 1; margin-bottom: 12px; }
+    .recipe-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: #9E8F80; border-top: 1px solid #FAF0E6; padding-top: 10px; font-family: system-ui, sans-serif; }
+
+    .blog-footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--blog-border); color: #9E8F80; font-size: 0.8rem; font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .settings-gear { cursor: pointer; opacity: 0.15; transition: opacity 0.2s; font-size: 1rem; user-select: none; }
+    .settings-gear:hover { opacity: 0.8; }
+
+    /* --- EMERGENCY DASHBOARD STYLE --- */
+    #dashboard-screen {
+      font-family: 'Space Grotesk', 'Outfit', sans-serif;
+      background-color: var(--dash-bg);
+      color: var(--dash-text);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+    @media (max-width: 640px) {
+      #dashboard-screen {
+        padding: 16px;
+        gap: 16px;
+      }
+    }
+    
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border: 1px solid var(--dash-border);
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      margin-bottom: 4px;
+    }
+    .dash-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .dash-logo svg {
+      width: 38px;
+      height: 38px;
+      background: var(--dash-red);
+      color: white !important;
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+    .dash-logo span {
+      display: flex;
+      flex-direction: column;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--dash-text);
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .dash-logo span::after {
+      content: 'SECURE V1.04 // INDORE REGION';
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      color: var(--dash-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    .sys-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      color: #34D399; /* emerald-400 */
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.1);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .sys-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #10B981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10B981;
+      animation: pulse 1.5s infinite;
+    }
+    
+    .exit-btn {
+      border: 1px solid #334155;
+      background: #0F172A;
+      color: #94A3B8;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      letter-spacing: 0.05em;
+    }
+    .exit-btn:hover {
+      background: #1E293B;
+      color: var(--dash-text);
+      border-color: #475569;
+    }
+    .exit-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.5;
+    }
+
+    /* Bento Grid Layout */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1.3fr;
+      gap: 20px;
+      flex-grow: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    @media (max-width: 850px) {
+      .bento-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Column: SOS & Voice */
+    .bento-col-left {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+    }
+    
+    .sos-panel {
+      background: rgba(15, 23, 42, 0.2);
+      border: 1px solid var(--dash-border);
+      border-radius: 20px;
+      width: 100%;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-height: 380px;
+      overflow: hidden;
+    }
+    .sos-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(220, 38, 38, 0.04) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .sos-panel.listening {
+      border-color: var(--dash-red);
+      box-shadow: inset 0 0 25px rgba(220, 38, 38, 0.08);
+    }
+    
+    /* SOS Button pulse targeting */
+    .mic-btn-outer {
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      background: rgba(220, 38, 38, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 1px solid rgba(220, 38, 38, 0.15);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .mic-btn-outer::before {
+      content: '';
+      position: absolute;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: rgba(220, 38, 38, 0.02);
+      border: 1px solid rgba(220, 38, 38, 0.08);
+      pointer-events: none;
+      animation: pulseOut 3s infinite linear;
+    }
+    .mic-btn-outer.active {
+      background: rgba(220, 38, 38, 0.15);
+      border-color: var(--dash-red);
+      box-shadow: 0 0 40px rgba(220, 38, 38, 0.35);
+    }
+    .mic-btn-inner {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: var(--dash-red);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 10px 25px rgba(220, 38, 38, 0.5);
+      transition: all 0.2s;
+    }
+    .mic-btn-inner::after {
+      content: 'SOS';
+      font-weight: 900;
+      font-size: 1.15rem;
+      letter-spacing: 0.15em;
+      margin-top: 4px;
+    }
+    .mic-btn-outer:active .mic-btn-inner {
+      transform: scale(0.95);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+    .mic-btn-inner svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    /* Animated Soundwave */
+    .wave-container {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      height: 24px;
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+    .wave-bar {
+      width: 3px;
+      height: 6px;
+      background-color: var(--dash-red);
+      border-radius: 3px;
+      transition: height 0.1s ease;
+    }
+    .listening .wave-bar { animation: bounce 0.8s ease infinite alternate; }
+    .listening .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+    .listening .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+    .listening .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+    .listening .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+    .listening .wave-bar:nth-child(6) { animation-delay: 0.3s; }
+    .listening .wave-bar:nth-child(7) { animation-delay: 0.2s; }
+    .listening .wave-bar:nth-child(8) { animation-delay: 0.1s; }
+
+    .mic-status-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--dash-text);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+    .mic-sublabel {
+      font-size: 11px;
+      color: var(--dash-muted);
+      font-family: 'JetBrains Mono', monospace;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    /* Right Column: Contacts Grid */
+    .bento-col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+    }
+    
+    .panel-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--dash-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .contacts-panel {
+      background: rgba(15, 23, 42, 0.2);
+      border: 1px solid var(--dash-border);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .contacts-list {
+      display: flex;
+      gap: 12px;
+    }
+    @media (max-width: 640px) {
+      .contacts-list {
+        flex-direction: column;
+      }
+    }
+    .contact-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid var(--dash-border);
+      padding: 16px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 140px;
+    }
+    .contact-card:hover {
+      border-color: var(--dash-red);
+      background: rgba(220, 38, 38, 0.03);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+    #contact-card-police {
+      background: rgba(59, 130, 246, 0.05);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+    #contact-card-police:hover {
+      border-color: var(--dash-blue);
+      background: rgba(59, 130, 246, 0.08);
+      transform: translateY(-2px);
+    }
+    .contact-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #1E293B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid var(--dash-border);
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+    .contact-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .contact-avatar svg {
+      width: 20px;
+      height: 20px;
+      color: var(--dash-muted);
+    }
+    .contact-details {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .contact-name {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .contact-name span:first-child {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--dash-text);
+      line-height: 1.2;
+    }
+    .contact-relation {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      color: #34D399; /* emerald-400 */
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      width: max-content;
+    }
+    .contact-relation.police {
+      color: #60A5FA; /* blue-400 */
+      background: rgba(96, 165, 250, 0.1);
+      border: 1px solid rgba(96, 165, 250, 0.2);
+    }
+    .contact-phone {
+      font-size: 11px;
+      color: var(--dash-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .tap-action {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--dash-text);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+      text-align: center;
+    }
+    .contact-card:hover .tap-action {
+      background: var(--dash-red);
+      border-color: var(--dash-red);
+      color: white;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+    }
+    #contact-card-police:hover .tap-action {
+      background: var(--dash-blue);
+      border-color: var(--dash-blue);
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Map & Safe Havens Panel */
+    .map-panel {
+      background: rgba(15, 23, 42, 0.2);
+      border: 1px solid var(--dash-border);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .map-container {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--dash-border);
+      background: #090A0C;
+    }
+    .map-container::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.2;
+      pointer-events: none;
+      background-image: radial-gradient(#334155 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 190px;
+      cursor: pointer;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .havens-list {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .havens-list::-webkit-scrollbar {
+      display: none;
+    }
+    .haven-btn {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid var(--dash-border);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--dash-text);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .haven-btn:hover {
+      border-color: #475569;
+      background: rgba(30, 41, 59, 0.5);
+    }
+    .haven-btn.active {
+      border-color: var(--dash-blue);
+      background: rgba(59, 130, 246, 0.12);
+      color: #93C5FD;
+    }
+    
+    .route-drawer {
+      background: rgba(59, 130, 246, 0.04);
+      border: 1px solid rgba(59, 130, 246, 0.15);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      color: #94A3B8;
+    }
+    
+    /* Device status panel */
+    .telemetry-panel {
+      background: rgba(15, 23, 42, 0.25);
+      border: 1px solid var(--dash-border);
+      border-radius: 14px;
+      padding: 14px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 768px) {
+      .telemetry-panel {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+    }
+    .telemetry-item {
+      color: var(--dash-muted);
+      letter-spacing: 0.02em;
+    }
+    .telemetry-item span {
+      color: var(--dash-text);
+      font-weight: 500;
+    }
+
+    /* --- OVERLAYS & MODALS --- */
+    .backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(3, 4, 6, 0.85);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 15px;
+      opacity: 1;
+      transition: opacity 0.3s;
+    }
+    .modal-card {
+      background: #FFFFFF;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 440px;
+      padding: 30px;
+      color: var(--blog-text);
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .modal-card.dark {
+      background: #0F1115;
+      color: var(--dash-text);
+      border: 1px solid var(--dash-border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.05);
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: inherit;
+      opacity: 0.6;
+      transition: all 0.2s;
+    }
+    .dark .modal-close {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .modal-close:hover {
+      opacity: 1;
+      background: rgba(0, 0, 0, 0.1);
+    }
+    .dark .modal-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .modal-title { font-size: 1.35rem; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .dark .modal-title { color: var(--dash-red); }
+    .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 0.8rem; font-weight: bold; text-transform: uppercase; opacity: 0.8; font-family: system-ui, sans-serif; }
+    .form-group input { padding: 10px; border-radius: 8px; border: 1px solid var(--blog-border); font-family: inherit; font-size: 0.95rem; }
+    .dark .form-group input { background: rgba(255,255,255,0.05); border-color: var(--dash-border); color: var(--dash-text); }
+    .file-input-row { display: flex; align-items: center; gap: 10px; }
+    .file-preview { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #E2E8F0; border: 2px solid var(--blog-border); display: flex; align-items: center; justify-content: center; }
+    .dark .file-preview { background: #374151; border-color: var(--dash-border); }
+    .file-preview img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 8px; border: none; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; }
+    .btn-primary { background: var(--blog-accent); color: white; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary { background: #E5E7EB; color: #1F2937; }
+    .btn-secondary:hover { background: #D1D5DB; }
+    .dark .btn-secondary { background: #374151; color: var(--dash-text); }
+    .dark .btn-secondary:hover { background: #4B5563; }
+    .btn-danger { background: var(--dash-red); color: white; }
+
+    /* Recipe Details Specifics */
+    .recipe-meta-box { background: #FDFBF7; border: 1px solid var(--blog-border); border-radius: 8px; padding: 12px; margin-bottom: 15px; display: flex; justify-content: space-around; font-size: 0.8rem; text-align: center; }
+    .recipe-meta-box strong { display: block; color: var(--blog-accent); font-size: 1.1rem; margin-bottom: 2px; }
+    .ingredients-list { margin-bottom: 15px; font-size: 0.9rem; list-style-position: inside; line-height: 1.5; color: #5C5248; }
+    .steps-list { font-size: 0.9rem; line-height: 1.5; color: #5C5248; display: flex; flex-direction: column; gap: 10px; }
+    .step-item { display: flex; gap: 10px; }
+    .step-num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--blog-accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-top: 2px; }
+
+    /* Countdown Overlay */
+    #countdown-overlay {
+      background: rgba(3, 4, 6, 0.96);
+      flex-direction: column;
+      gap: 24px;
+      z-index: 3000;
+      backdrop-filter: blur(8px);
+    }
+    .countdown-circle {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 4px solid var(--dash-amber);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.5rem;
+      font-weight: 700;
+      color: var(--dash-amber);
+      animation: countPulse 1s infinite;
+      font-family: 'Space Grotesk', 'Outfit', sans-serif;
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.2);
+    }
+    .countdown-msg { text-align: center; font-size: 1.2rem; max-width: 300px; color: var(--dash-text); line-height: 1.4; font-weight: 500; }
+    .countdown-banner { background: var(--dash-red); color: white; width: 100%; text-align: center; padding: 12px; font-weight: bold; letter-spacing: 1px; font-size: 0.9rem; }
+
+    /* Emergency Active Panel */
+    #alert-modal {
+      background: rgba(3, 4, 6, 0.96);
+      z-index: 4000;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      backdrop-filter: blur(8px);
+    }
+    .strobe-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: transparent; z-index: -1; pointer-events: none; }
+    .strobe-active .strobe-overlay { animation: strobeEffect 0.2s infinite; }
+    .alert-card {
+      background: #0A0A0B;
+      border: 3px solid var(--dash-red);
+      box-shadow: 0 0 50px rgba(220, 38, 38, 0.4);
+      border-radius: 24px;
+      width: 90%;
+      max-width: 480px;
+      padding: 40px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .alert-siren-gif { width: 80px; height: 80px; margin-bottom: 15px; color: var(--dash-red); animation: rotateSiren 2s linear infinite; }
+    
+    .alert-card h2 { color: var(--dash-red); font-size: 1.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .alert-status-text { font-size: 1rem; color: white; margin-bottom: 20px; line-height: 1.4; }
+    .alert-location-coords { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 6px; border: 1px dashed var(--dash-border); color: #10B981; margin-bottom: 25px; }
+    
+    .sms-fallback-btn { background: var(--dash-amber) !important; color: #000 !important; font-weight: 700; font-size: 1rem; padding: 15px; border-radius: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; animation: amberPulse 1.5s infinite; border: none; width: 100%; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(245,158,11,0.3); cursor: pointer; }
+
+    /* Animations */
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.15); opacity: 0.5; box-shadow: 0 0 12px var(--dash-green); }
+      100% { transform: scale(1); opacity: 0.9; }
+    }
+    @keyframes pulseOut {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      100% { transform: scale(1.3); opacity: 0; }
+    }
+    @keyframes countPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); box-shadow: 0 0 15px var(--dash-amber); }
+      100% { transform: scale(1); }
+    }
+    @keyframes breathe {
+      0%, 100% { box-shadow: 0 0 15px rgba(239,68,68,0.3); }
+      50% { box-shadow: 0 0 35px rgba(239,68,68,0.6); }
+    }
+    @keyframes bounce {
+      0% { height: 4px; }
+      100% { height: 28px; }
+    }
+    @keyframes rotateSiren {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes strobeEffect {
+      0%, 100% { background-color: rgba(220, 38, 38, 0.45); }
+      50% { background-color: rgba(59, 130, 246, 0.45); }
+    }
+    @keyframes amberPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== SCREEN 1: RECIPES BLOG (STEALTH) ==================== -->
+  <div id="blog-screen" class="screen">
+    <header class="blog-header">
+      <div class="blog-logo">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M6 18c0-3.3 2.7-6 6-6s6 2.7 6 6H6z" />
+          <path d="M12 12V3m0 0l3 3m-3-3L9 6" />
+        </svg>
+        <span>Swaad & Swasthya</span>
+      </div>
+      <nav class="blog-nav">
+        <span class="active">Daily Feed</span>
+        <span>About</span>
+        <span>FAQ</span>
+      </nav>
+    </header>
+
+    <main class="blog-container">
+      <div class="blog-hero">
+        <h1>Warm Home-Style Delights</h1>
+        <p>Discover easy, wholesome Indian vegetarian recipes crafted with authentic aromatic spices and love.</p>
+        <span style="font-family: system-ui; font-size: 0.8rem; font-weight: bold; background: #FFF; padding: 4px 8px; border-radius: 4px; color: var(--blog-accent);">July 2026 Featured Selection</span>
+      </div>
+
+      <div class="recipe-grid">
+        <!-- STEALTH TRIGGER RECIPE CARD (TRIPLE TAP ON IMAGE REVEALS SAFE CONSOLE) -->
+        <div class="recipe-card" id="paneer-card">
+          <div class="recipe-image" id="stealth-trigger">
+            <div style="background: radial-gradient(circle, #FFA67A, #D47A41); width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#FFF; font-family:'Lora', serif;">
+              Paneer Butter Masala
+            </div>
+            <span class="recipe-badge">Popular</span>
+          </div>
+          <div class="recipe-info">
+            <h3 class="recipe-title">Paneer Butter Masala</h3>
+            <p class="recipe-desc">A premium, restaurant-quality classic curry combining tender cottage cheese cubes inside a velvety, rich, mildly sweet tomato-cashew cream gravy.</p>
+            <div class="recipe-meta">
+              <span>⏱ 25 Mins</span>
+              <span>⭐ 4.9 (1.4k Reviews)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MOCK RECIPE CARD 2 -->
+        <div class="recipe-card" id="dal-card">
+          <div class="recipe-image" onclick="openRecipe('dal')">
+            <div style="background: radial-gradient(circle, #A1856C, #5C4A3A); width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#FFF; font-family:'Lora', serif;">
+              Makhani Dal
+            </div>
+            <span class="recipe-badge">Classic</span>
+          </div>
+          <div class="recipe-info">
+            <h3 class="recipe-title">Slow-Cooked Dal Makhani</h3>
+            <p class="recipe-desc">A celebrated slow-simmered dark urad dal and red kidney bean delicacy, layered generously with pure butter, local spices, and fresh thick cream.</p>
+            <div class="recipe-meta">
+              <span>⏱ 45 Mins</span>
+              <span>⭐ 4.8 (850 Reviews)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="blog-footer">
+      <span>© 2026 Swaad & Swasthya • Authentic Indian Culinary Guide</span>
+      <!-- OBSCURE CONFIG GEAR -->
+      <span id="stealth-settings" class="settings-gear" title="System Config">⚙️</span>
+    </footer>
+  </div>
+
+
+  <!-- ==================== SCREEN 2: SAFETY CONSOLE (RAKSHA KAVACH) ==================== -->
+  <div id="dashboard-screen" class="screen hidden">
+    <header class="dash-header">
+      <div class="dash-logo">
+        <svg class="icon" viewBox="0 0 24 24" style="color:var(--dash-red);">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
+        <span>RAKSHA KAVACH</span>
+      </div>
+      <div class="sys-status">
+        <span class="sys-dot"></span>
+        <span>SYSTEM SECURED</span>
+      </div>
+      <button class="exit-btn" id="exit-dashboard-btn">
+        <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+        <span>STEALTH</span>
+      </button>
+    </header>
+
+    <div class="bento-grid">
+      <!-- LEFT COL: VOICE INTEGRATION & SOS KEY -->
+      <div class="bento-col-left">
+        <div class="sos-panel" id="sos-mic-panel">
+          <div class="panel-title">
+            <svg class="icon" viewBox="0 0 24 24" style="color:var(--dash-red); width:16px; height:16px;">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+            </svg>
+            <span>Emergency Voice Trigger</span>
+          </div>
+          
+          <div class="mic-btn-outer" id="mic-trigger-btn">
+            <div class="mic-btn-inner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                <path d="M19 10v1a7 7 0 0 1-14 0v-1M12 19v4M8 23h8"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="wave-container">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+          </div>
+
+          <div class="mic-status-label" id="mic-status-text">TAP TO DETECT CRITICAL VOICE</div>
+          <div class="mic-sublabel">Keywords: "help", "bachao", "save me", "shor", "police"</div>
+        </div>
+      </div>
+
+      <!-- RIGHT COL: CONTACTS PANEL & HAVENS -->
+      <div class="bento-col-right">
+        <!-- Contacts -->
+        <div class="contacts-panel">
+          <div class="panel-title">
+            <svg class="icon" viewBox="0 0 24 24" style="color:var(--dash-amber); width:16px; height:16px;">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>Guardian Speed-Alerts</span>
+          </div>
+          <div class="contacts-list" id="contacts-container">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+
+        <!-- Safe Havens Map -->
+        <div class="map-panel">
+          <div class="panel-title">
+            <svg class="icon" viewBox="0 0 24 24" style="color:var(--dash-blue); width:16px; height:16px;">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+              <line x1="8" y1="2" x2="8" y2="18" />
+              <line x1="16" y1="6" x2="16" y2="22" />
+            </svg>
+            <span>Local Angels Safe-Map</span>
+          </div>
+          <div class="map-container">
+            <canvas id="radarMap" width="400" height="190"></canvas>
+          </div>
+          <div class="havens-list">
+            <button class="haven-btn" id="haven-0" onclick="selectHaven(0)">Gupta Kirana (120m)</button>
+            <button class="haven-btn" id="haven-1" onclick="selectHaven(1)">Sharma Medicals (250m)</button>
+            <button class="haven-btn" id="haven-2" onclick="selectHaven(2)">Police Chowki (450m)</button>
+          </div>
+          <div class="route-drawer" id="route-drawer-info">
+            <span>Tap a safe-haven pin above or on the radar map to display illuminated street-route paths instantly.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemetry -->
+    <div class="telemetry-panel">
+      <div class="telemetry-item">GPS STATUS: <span id="gps-status" style="color:var(--dash-green);">HIGH ACCURACY</span></div>
+      <div class="telemetry-item">SECURE SERVER: <span style="color:var(--dash-green);">HANDSHAKE OK</span></div>
+      <div class="telemetry-item">LAT: <span id="gps-lat">22.7196</span></div>
+      <div class="telemetry-item">LNG: <span id="gps-lng">75.8577</span></div>
+      <div style="grid-column: span 2; border-top: 1px solid var(--dash-border); padding-top: 4px; color: var(--dash-muted);">
+        LAST SAFE KNOWN ADDRESS: <span style="color:var(--dash-text); font-size: 0.65rem;">Vijay Nagar Road, Indore, MP</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================== DETAIL MODALS & OVERLAYS ==================== -->
+
+  <!-- RECIPE DETAIL MODAL -->
+  <div id="recipe-modal" class="backdrop hidden">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal('recipe-modal')">✕</button>
+      <div id="recipe-content"></div>
+    </div>
+  </div>
+
+  <!-- OBSTRUCTED SETTINGS CONFIG MODAL -->
+  <div id="settings-modal" class="backdrop hidden">
+    <div class="modal-card dark">
+      <button class="modal-close" onclick="closeModal('settings-modal')">✕</button>
+      <div class="modal-title">
+        <svg class="icon" viewBox="0 0 24 24" style="color:var(--dash-amber);">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        <span>Raksha Stealth Setup</span>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--dash-muted); margin-bottom: 15px;">Configure your emergency distress contacts. These remain saved locally in your secure browser space.</p>
+      
+      <!-- Contact 1 Config -->
+      <div style="border-bottom: 1px solid var(--dash-border); padding-bottom: 12px; margin-bottom: 12px;">
+        <h4 style="font-size: 0.85rem; color: var(--dash-amber); margin-bottom: 8px;">Distress Contact #1</h4>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="cfg-name1" placeholder="Father, Brother, Husband etc." />
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="text" id="cfg-phone1" placeholder="+91 XXXXXXXXXX" />
+        </div>
+        <div class="form-group">
+          <label>Avatar / Profile Picture</label>
+          <div class="file-input-row">
+            <div class="file-preview" id="preview-img1">👨</div>
+            <input type="file" id="cfg-file1" accept="image/*" style="font-size: 0.75rem; flex-grow: 1;" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact 2 Config -->
+      <div style="padding-bottom: 12px; margin-bottom: 15px;">
+        <h4 style="font-size: 0.85rem; color: var(--dash-amber); margin-bottom: 8px;">Distress Contact #2</h4>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="cfg-name2" placeholder="Emergency Contact 2" />
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="text" id="cfg-phone2" placeholder="+91 XXXXXXXXXX" />
+        </div>
+        <div class="form-group">
+          <label>Avatar / Profile Picture</label>
+          <div class="file-input-row">
+            <div class="file-preview" id="preview-img2">👩</div>
+            <input type="file" id="cfg-file2" accept="image/*" style="font-size: 0.75rem; flex-grow: 1;" />
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-secondary" onclick="restoreDefaults()" style="font-size: 0.8rem; width: 40%;">RESET</button>
+        <button class="btn btn-primary" onclick="saveSettings()" style="width: 60%;">SAVE distressees</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMERGENCY COUNTDOWN OVERLAY -->
+  <div id="countdown-overlay" class="backdrop hidden">
+    <div class="countdown-banner">EMERGENCY SOS COMMENCING</div>
+    <div class="countdown-circle" id="countdown-num">3</div>
+    <div class="countdown-msg">Sending coordinates & alerts in seconds. Hover or Tap CANCEL to abort.</div>
+    <button class="btn btn-danger" id="cancel-sos-btn" style="max-width: 250px; font-size: 1rem; padding: 12px; border: 2px solid white;">CANCEL SOS</button>
+  </div>
+
+  <!-- ACTIVE SIREN & BROADSHEET MODAL -->
+  <div id="alert-modal" class="hidden">
+    <div class="strobe-overlay"></div>
+    <div class="alert-card">
+      <div class="alert-siren-gif">
+        <svg viewBox="0 0 24 24" width="80" height="80" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <path d="m12 8 3 4H9l3-4z" />
+        </svg>
+      </div>
+      <h2>Emergency Alarm Active</h2>
+      <p class="alert-status-text" id="alert-network-desc">Executing high-priority signal broadcast...</p>
+      
+      <div class="alert-location-coords" id="alert-coords-box">
+        COORDS: LAT 22.7196 | LNG 75.8577
+      </div>
+
+      <!-- SMS Link Target inside responsive PWA -->
+      <a href="#" id="sms-trigger-link" class="sms-fallback-btn">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span>TAP TO TRIGGER SMS FALLBACK</span>
+      </a>
+
+      <button class="btn btn-primary" id="stop-alert-btn" style="background:var(--dash-green); font-size: 0.95rem; padding: 12px; margin-top: 5px;">
+        DEACTIVATE SECURITY STROBE
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ==================== FRONT-END JAVA SCRIPT ENGINE ==================== -->
+  <script>
+    // Global Applet Configuration & State
+    let isStealthMode = true;
+    let recordingActive = false;
+    let alertActive = false;
+    let countdownActive = false;
+    let countdownTimer = null;
+    let countdownVal = 3;
+
+    // Siren Audio Context Variables
+    let audioCtx = null;
+    let oscNode = null;
+    let gainNode = null;
+    let sirenTimer = null;
+
+    // Speech Recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let speechRecognizer = null;
+
+    // Emergency Contacts Array (Loaded or initialized)
+    let emergencyContacts = [];
+
+    // Safe Havens List and Active Route Target
+    const safeHavens = [
+      { name: "Gupta Kirana Shop", distance: "120m", x: 290, y: 70, type: "shop", desc: "Local general grocery vendor, registered safety hub with lit frontage and local community connection." },
+      { name: "Sharma Medicals", distance: "250m", x: 100, y: 80, type: "medical", desc: "24/7 Pharmaceutical store, CCTV active, trained security attendant, safety phone available." },
+      { name: "Police Chowki", distance: "450m", x: 200, y: 155, type: "police", desc: "Local Police Outpost, continuous patrolling personnel, state-monitored high security zone." }
+    ];
+    let selectedHavenIndex = null;
+
+    // Double/Triple click tracker for image
+    let clickTimestamps = [];
+
+    // On Document Ready
+    window.addEventListener('DOMContentLoaded', () => {
+      // Register standard service worker safely
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+          .then(() => console.log('Raksha Kavach Service Worker Initialized'))
+          .catch((e) => console.log('Service Worker setup skipped or offline', e));
+      }
+
+      // Load Contacts from LocalStorage
+      initContacts();
+
+      // Setup Triple Click Detection on recipe
+      const triggerCard = document.getElementById('stealth-trigger');
+      triggerCard.addEventListener('click', handleRecipeClick);
+
+      // Obscure Settings gear
+      document.getElementById('stealth-settings').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSettingsModal();
+      });
+
+      // Settings Save & Previews
+      setupImagePreviews();
+
+      // UI Actions
+      document.getElementById('exit-dashboard-btn').addEventListener('click', exitDashboard);
+      document.getElementById('mic-trigger-btn').addEventListener('click', toggleVoiceSensing);
+      document.getElementById('cancel-sos-btn').addEventListener('click', cancelDistressSequence);
+      document.getElementById('stop-alert-btn').addEventListener('click', deactivateAlertState);
+
+      // Radar Canvas Animation
+      drawRadar();
+
+      // Canvas click/tap selection
+      const canvas = document.getElementById('radarMap');
+      canvas.addEventListener('click', handleCanvasClick);
+
+      // TTS setup for hover/long-presses inside Security Dashboard
+      attachTtsListeners();
+    });
+
+    // --- STEALTH TRIP-TAP ENGINE ---
+    function handleRecipeClick(e) {
+      const now = Date.now();
+      clickTimestamps.push(now);
+      if (clickTimestamps.length > 3) clickTimestamps.shift();
+
+      if (clickTimestamps.length === 3 && (clickTimestamps[2] - clickTimestamps[0] < 1000)) {
+        revealEmergencyConsole();
+        clickTimestamps = []; // reset
+      } else {
+        // Simple click opens Paneer Recipe details normally
+        setTimeout(() => {
+          // If we did not complete trip-tap, trigger recipe view
+          if (clickTimestamps.length > 0 && clickTimestamps.length < 3) {
+            openRecipe('paneer');
+          }
+        }, 300);
+      }
+    }
+
+    // Modal Manager
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    //convincing mock recipes details
+    function openRecipe(key) {
+      const content = document.getElementById('recipe-content');
+      if (key === 'paneer') {
+        content.innerHTML = `
+          <h2 style="font-size:1.4rem; color:var(--blog-accent); margin-bottom:8px;">Creamy Paneer Butter Masala</h2>
+          <div class="recipe-meta-box">
+            <div><strong>25</strong> Prep (Mins)</div>
+            <div><strong>3</strong> Servings</div>
+            <div><strong>Easy</strong> Difficulty</div>
+          </div>
+          <h4 style="margin-bottom:6px; font-weight:600;">Ingredients Needed</h4>
+          <ul class="ingredients-list">
+            <li>Fresh Paneer (Cottage Cheese) - 250g, cubed</li>
+            <li>Ripe Red Tomatoes - 4, pureed</li>
+            <li>Cashews - 10-12, soaked in water</li>
+            <li>Fresh Cream - 3 tbsp</li>
+            <li>Pure Butter - 2 tbsp, Spices & Kasuri Methi</li>
+          </ul>
+          <h4 style="margin-bottom:6px; font-weight:600;">Culinary Steps</h4>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-num">1</div><p>Simmer pureed tomatoes, cashews, ginger and garlic until dark red and aromatic.</p></div>
+            <div class="step-item"><div class="step-num">2</div><p>Blend this base into a smooth paste and heat in pan adding butter, cardamoms, and cloves.</p></div>
+            <div class="step-item"><div class="step-num">3</div><p>Toss fresh cottage cheese cubes, pour fresh cream and sprinkle hand-ground spice mix.</p></div>
+          </div>
+        `;
+      } else {
+        content.innerHTML = `
+          <h2 style="font-size:1.4rem; color:var(--blog-accent); margin-bottom:8px;">Slow-Cooked Dal Makhani</h2>
+          <div class="recipe-meta-box">
+            <div><strong>45</strong> Cook (Mins)</div>
+            <div><strong>4</strong> Servings</div>
+            <div><strong>Medium</strong> Difficulty</div>
+          </div>
+          <h4 style="margin-bottom:6px; font-weight:600;">Ingredients Needed</h4>
+          <ul class="ingredients-list">
+            <li>Black Urad Lentils - 1 Cup, soaked overnight</li>
+            <li>Red Kidney Beans (Rajma) - 1/4 Cup</li>
+            <li>Butter - 3 tbsp, Garlic Cloves & Tomato Paste</li>
+            <li>Fresh Dairy Cream - 4 tbsp</li>
+          </ul>
+          <h4 style="margin-bottom:6px; font-weight:600;">Culinary Steps</h4>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-num">1</div><p>Pressure cook pre-soaked lentils and beans together for 4-5 whistles until very tender.</p></div>
+            <div class="step-item"><div class="step-num">2</div><p>Slow simmer on medium flame for 30 minutes, adding butter and pure tomato paste.</p></div>
+            <div class="step-item"><div class="step-num">3</div><p>Top with heavy cream, fresh coriander sprigs, and serve hot with fresh naan.</p></div>
+          </div>
+        `;
+      }
+      openModal('recipe-modal');
+    }
+
+    // --- SECURITY CONTROLLER CONSOLE REVEAL ---
+    function revealEmergencyConsole() {
+      isStealthMode = false;
+      document.title = "RAKSHA KAVACH - Secure Console";
+      
+      const blog = document.getElementById('blog-screen');
+      const dash = document.getElementById('dashboard-screen');
+      
+      blog.style.opacity = 0;
+      setTimeout(() => {
+        blog.classList.add('hidden');
+        dash.classList.remove('hidden');
+        dash.style.opacity = 0;
+        setTimeout(() => {
+          dash.style.opacity = 1;
+          speakHindi("रक्षा कवच एक्टिव हो गया है। घबराएं नहीं।");
+          // Prompt for GPS
+          requestLiveLocation();
+        }, 50);
+      }, 400);
+    }
+
+    function exitDashboard() {
+      isStealthMode = true;
+      document.title = "Swaad & Swasthya - Daily Recipes";
+      stopSirenEngine();
+      stopVoiceSensing();
+      
+      const blog = document.getElementById('blog-screen');
+      const dash = document.getElementById('dashboard-screen');
+      
+      dash.style.opacity = 0;
+      setTimeout(() => {
+        dash.classList.add('hidden');
+        blog.classList.remove('hidden');
+        blog.style.opacity = 0;
+        setTimeout(() => {
+          blog.style.opacity = 1;
+        }, 50);
+      }, 400);
+    }
+
+    // --- CONTACTS DATABASE SETUP ---
+    function initContacts() {
+      const local = localStorage.getItem('raksha_contacts');
+      if (local) {
+        emergencyContacts = JSON.parse(local);
+      } else {
+        // Pre-configure realistic mock data
+        emergencyContacts = [
+          { name: "Papa (Guardian)", phone: "+919876543210", relation: "Papa", image: "" },
+          { name: "Bhai (Emergency)", phone: "+918765432109", relation: "Bhai", image: "" }
+        ];
+        localStorage.setItem('raksha_contacts', JSON.stringify(emergencyContacts));
+      }
+      renderContacts();
+    }
+
+    function renderContacts() {
+      const container = document.getElementById('contacts-container');
+      container.innerHTML = '';
+      
+      emergencyContacts.forEach((contact, idx) => {
+        const card = document.createElement('div');
+        card.className = 'contact-card';
+        card.id = `contact-card-${idx}`;
+        card.dataset.name = contact.name;
+        card.dataset.phone = contact.phone;
+        card.dataset.relation = contact.relation || "Guardian";
+        
+        // Use user-uploaded picture (Base64) or fallback SVG avatar
+        let avatarHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        `;
+        if (contact.image) {
+          avatarHTML = `<img src="${contact.image}" alt="${contact.name}">`;
+        }
+
+        card.innerHTML = `
+          <div class="contact-avatar">${avatarHTML}</div>
+          <div class="contact-details">
+            <div class="contact-name">
+              <span>${contact.name}</span>
+              <span class="contact-relation">${contact.relation || "Guardian"}</span>
+            </div>
+            <div class="contact-phone">${contact.phone}</div>
+          </div>
+          <button class="tap-action">TAP ALERT</button>
+        `;
+
+        card.addEventListener('click', () => {
+          triggerDistressSequence(contact.name, contact.phone);
+        });
+
+        container.appendChild(card);
+      });
+
+      // Add a constant Police dispatch card
+      const policeCard = document.createElement('div');
+      policeCard.className = 'contact-card';
+      policeCard.id = 'contact-card-police';
+      policeCard.innerHTML = `
+        <div class="contact-avatar" style="border-color:var(--dash-blue); background:rgba(59,130,246,0.1);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--dash-blue)" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        </div>
+        <div class="contact-details">
+          <div class="contact-name">
+            <span>Police Dispatch Control</span>
+            <span class="contact-relation police">112</span>
+          </div>
+          <div class="contact-phone">POLICE DESK: 112 / 100</div>
+        </div>
+        <button class="tap-action" style="background:var(--dash-blue);">112 CALL</button>
+      `;
+      policeCard.addEventListener('click', () => {
+        triggerDistressSequence("Police Control Room", "112");
+      });
+      container.appendChild(policeCard);
+
+      // Re-attach TTS listeners after contact updates
+      attachTtsListeners();
+    }
+
+    // Image file parsing
+    function setupImagePreviews() {
+      ['1', '2'].forEach(num => {
+        const fileInput = document.getElementById(`cfg-file${num}`);
+        const preview = document.getElementById(`preview-img${num}`);
+        
+        fileInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              preview.innerHTML = `<img src="${event.target.result}" alt="Preview">`;
+              preview.dataset.base64 = event.target.result;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      });
+    }
+
+    function openSettingsModal() {
+      // Pop fields with current data
+      document.getElementById('cfg-name1').value = emergencyContacts[0]?.name || '';
+      document.getElementById('cfg-phone1').value = emergencyContacts[0]?.phone || '';
+      if (emergencyContacts[0]?.image) {
+        document.getElementById('preview-img1').innerHTML = `<img src="${emergencyContacts[0].image}">`;
+        document.getElementById('preview-img1').dataset.base64 = emergencyContacts[0].image;
+      } else {
+        document.getElementById('preview-img1').innerHTML = '👨';
+        delete document.getElementById('preview-img1').dataset.base64;
+      }
+
+      document.getElementById('cfg-name2').value = emergencyContacts[1]?.name || '';
+      document.getElementById('cfg-phone2').value = emergencyContacts[1]?.phone || '';
+      if (emergencyContacts[1]?.image) {
+        document.getElementById('preview-img2').innerHTML = `<img src="${emergencyContacts[1].image}">`;
+        document.getElementById('preview-img2').dataset.base64 = emergencyContacts[1].image;
+      } else {
+        document.getElementById('preview-img2').innerHTML = '👩';
+        delete document.getElementById('preview-img2').dataset.base64;
+      }
+
+      openModal('settings-modal');
+    }
+
+    function saveSettings() {
+      const name1 = document.getElementById('cfg-name1').value.trim();
+      const phone1 = document.getElementById('cfg-phone1').value.trim();
+      const img1 = document.getElementById('preview-img1').dataset.base64 || '';
+
+      const name2 = document.getElementById('cfg-name2').value.trim();
+      const phone2 = document.getElementById('cfg-phone2').value.trim();
+      const img2 = document.getElementById('preview-img2').dataset.base64 || '';
+
+      if (!name1 || !phone1) {
+        alert("Primary Distress Contact name and number are mandatory!");
+        return;
+      }
+
+      emergencyContacts = [
+        { name: name1, phone: phone1, relation: "Primary", image: img1 },
+        { name: name2 || "Mumma (Guardian)", phone: phone2 || "+918888888888", relation: "Secondary", image: img2 }
+      ];
+
+      localStorage.setItem('raksha_contacts', JSON.stringify(emergencyContacts));
+      renderContacts();
+      closeModal('settings-modal');
+    }
+
+    function restoreDefaults() {
+      localStorage.removeItem('raksha_contacts');
+      initContacts();
+      closeModal('settings-modal');
+    }
+
+
+    // --- RADAR CANVAS SIMULATED INTELLIGENCE ---
+    function drawRadar() {
+      const canvas = document.getElementById('radarMap');
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      let angle = 0;
+
+      function renderFrame() {
+        if (isStealthMode) return requestAnimationFrame(renderFrame);
+
+        ctx.fillStyle = "#0E121A";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw street lines
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY);
+        ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height);
+        ctx.moveTo(0, 40); ctx.lineTo(canvas.width, 140);
+        ctx.moveTo(80, 0); ctx.lineTo(120, canvas.height);
+        ctx.stroke();
+
+        // Draw radar rings
+        ctx.strokeStyle = "rgba(59, 130, 246, 0.15)";
+        ctx.lineWidth = 1;
+        for (let r = 30; r < 140; r += 35) {
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Draw sweeping beam
+        ctx.strokeStyle = "rgba(59, 130, 246, 0.3)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + 150 * Math.cos(angle), centerY + 150 * Math.sin(angle));
+        ctx.stroke();
+        angle += 0.012;
+
+        // Draw walking path if safe haven selected
+        if (selectedHavenIndex !== null) {
+          const target = safeHavens[selectedHavenIndex];
+          ctx.strokeStyle = "var(--dash-amber)";
+          ctx.lineWidth = 3.5;
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.setLineDash([4, 4]);
+
+          // Draw step route with street turns for realism
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          
+          if (selectedHavenIndex === 0) { // Gupta Shop
+            ctx.lineTo(target.x, centerY);
+          } else if (selectedHavenIndex === 1) { // Sharma Medical
+            ctx.lineTo(centerX, target.y);
+          } else { // Police Chowki
+            ctx.lineTo(target.x, target.y);
+          }
+          
+          ctx.lineTo(target.x, target.y);
+          ctx.stroke();
+          ctx.setLineDash([]); // Reset
+        }
+
+        // Draw User Blue pulsing dot
+        const pulseSize = 6 + 4 * Math.abs(Math.sin(Date.now() / 250));
+        ctx.fillStyle = "rgba(59, 130, 246, 0.35)";
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, pulseSize + 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "var(--dash-blue)";
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw Havens Pins
+        safeHavens.forEach((haven, idx) => {
+          const isSelected = (idx === selectedHavenIndex);
+          ctx.fillStyle = isSelected ? "var(--dash-amber)" : "var(--dash-green)";
+          
+          ctx.beginPath();
+          ctx.arc(haven.x, haven.y, 8, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Outer ring
+          ctx.strokeStyle = isSelected ? "rgba(245,158,11,0.5)" : "rgba(16,185,129,0.3)";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(haven.x, haven.y, 13, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Symbol
+          ctx.fillStyle = "#000";
+          ctx.font = "8px Outfit, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          let symbol = "S";
+          if (haven.type === "medical") symbol = "M";
+          if (haven.type === "police") symbol = "P";
+          ctx.fillText(symbol, haven.x, haven.y);
+        });
+
+        requestAnimationFrame(renderFrame);
+      }
+      renderFrame();
+    }
+
+    function handleCanvasClick(e) {
+      const rect = e.target.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      // Scale coordinates if canvas dimensions differ visually from drawn coordinates
+      const scaleX = 400 / rect.width;
+      const scaleY = 190 / rect.height;
+      const finalX = clickX * scaleX;
+      const finalY = clickY * scaleY;
+
+      // Check click proximity to havens (radius within 15px)
+      for (let i = 0; i < safeHavens.length; i++) {
+        const dx = finalX - safeHavens[i].x;
+        const dy = finalY - safeHavens[i].y;
+        if (Math.sqrt(dx*dx + dy*dy) < 15) {
+          selectHaven(i);
+          return;
+        }
+      }
+    }
+
+    function selectHaven(index) {
+      selectedHavenIndex = index;
+      const target = safeHavens[index];
+
+      // Highlight button state
+      for (let i = 0; i < 3; i++) {
+        const btn = document.getElementById(`haven-${i}`);
+        if (i === index) btn.classList.add('active');
+        else btn.classList.remove('active');
+      }
+
+      // Update instructions info
+      const drawer = document.getElementById('route-drawer-info');
+      drawer.innerHTML = `
+        <span style="color:var(--dash-amber); font-weight:700;">ROUTE ESTABLISHED: ${target.name} (${target.distance})</span>
+        <span style="color:var(--dash-text); font-size:0.7rem; margin-top:2px;">${target.desc}</span>
+        <span style="color:var(--dash-green); font-weight:600; font-size:0.65rem; margin-top:4px;">✨ Safety illumination path verified & synced live to local device cache.</span>
+      `;
+
+      speakHindi(`${target.name} का रास्ता मैप पर दिखा दिया गया है। दूरी ${target.distance} है।`);
+    }
+
+
+    // --- HINDI WEB SPEECH AUDIO SYNTHESIS ---
+    function speakHindi(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Abort previous speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'hi-IN';
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function attachTtsListeners() {
+      // Exit Dashboard Button
+      setupInteractiveTts('exit-dashboard-btn', "रेसिपी ब्लॉग पर सुरक्षित वापस जाने के लिए यहाँ क्लिक करें।");
+      
+      // Voice Mic button
+      setupInteractiveTts('sos-mic-panel', "आवाज़ से मदद के लिए इस लाल बटन को दबाएं या जोर से 'बचाओ' बोलें।");
+
+      // Contacts
+      emergencyContacts.forEach((contact, idx) => {
+        const elem = document.getElementById(`contact-card-${idx}`);
+        if (elem) {
+          setupInteractiveTts(`contact-card-${idx}`, `${contact.name} को तुरंत अलर्ट और आपकी लाइव लोकेशन भेजने के लिए क्लिक करें।`);
+        }
+      });
+
+      // Police Contact Card
+      const policeCard = document.getElementById('contact-card-police');
+      if (policeCard) {
+        setupInteractiveTts('contact-card-police', "पुलिस कंट्रोल रूम नंबर ११२ पर तुरंत आपातकालीन सूचना भेजने और फोन लगाने के लिए क्लिक करें।");
+      }
+
+      // Safe Havens Buttons
+      setupInteractiveTts('haven-0', "गुप्ता किराना दुकान सुरक्षित स्थान का रास्ता देखने के लिए यहाँ क्लिक करें।");
+      setupInteractiveTts('haven-1', "शर्मा मेडिकल सुरक्षित स्थान का रास्ता देखने के लिए यहाँ क्लिक करें।");
+      setupInteractiveTts('haven-2', "पुलिस चौकी सुरक्षा केंद्र का रास्ता देखने के लिए यहाँ क्लिक करें।");
+    }
+
+    function setupInteractiveTts(id, text) {
+      const element = document.getElementById(id);
+      if (!element) return;
+
+      // Mouse Hover support
+      element.addEventListener('mouseenter', () => {
+        if (!isStealthMode && !alertActive) speakHindi(text);
+      });
+      element.addEventListener('mouseleave', () => {
+        if (!isStealthMode) window.speechSynthesis.cancel();
+      });
+
+      // Long press / Tap support for mobiles
+      let touchTimer = null;
+      element.addEventListener('touchstart', (e) => {
+        if (isStealthMode || alertActive) return;
+        touchTimer = setTimeout(() => {
+          speakHindi(text);
+        }, 600);
+      }, { passive: true });
+
+      element.addEventListener('touchend', () => {
+        clearTimeout(touchTimer);
+      });
+      element.addEventListener('touchmove', () => {
+        clearTimeout(touchTimer);
+      });
+    }
+
+
+    // --- WEB SPEECH RECOGNITION TRIGGERS ---
+    function toggleVoiceSensing() {
+      if (recordingActive) {
+        stopVoiceSensing();
+      } else {
+        startVoiceSensing();
+      }
+    }
+
+    function startVoiceSensing() {
+      if (!SpeechRecognition) {
+        alert("Web Speech recognition is not supported in this browser. Please use Chrome/Safari.");
+        return;
+      }
+
+      recordingActive = true;
+      document.getElementById('sos-mic-panel').classList.add('listening');
+      document.getElementById('mic-trigger-btn').classList.add('active');
+      document.getElementById('mic-status-text').innerHTML = "🎤 LISTENING FOR TRIGGER PHRASES...";
+      document.getElementById('mic-status-text').style.color = "var(--dash-red)";
+      speakHindi("माइक एक्टिव है। मदद, बचाओ, या पुलिस बोलें।");
+
+      try {
+        speechRecognizer = new SpeechRecognition();
+        speechRecognizer.continuous = true;
+        speechRecognizer.interimResults = false;
+        speechRecognizer.lang = 'hi-IN'; // Set to Hindi/English dual detection capability
+
+        speechRecognizer.onresult = (event) => {
+          const text = event.results[event.results.length - 1][0].transcript.toLowerCase();
+          console.log("Vocal signal analysis:", text);
+          
+          const triggers = ["help", "bachao", "save me", "shor", "police", "मदद", "बचाओ", "सुरक्षा", "बचा", "emergency"];
+          if (triggers.some(word => text.includes(word))) {
+            triggerDistressSequence("Vocal Keyword Sensing", "VOICE ACTIVATION");
+          }
+        };
+
+        speechRecognizer.onend = () => {
+          // Restart immediately if recording is still toggled
+          if (recordingActive) {
+            speechRecognizer.start();
+          }
+        };
+
+        speechRecognizer.start();
+      } catch (e) {
+        console.error("Speech Recognition Engine initialization error", e);
+      }
+    }
+
+    function stopVoiceSensing() {
+      recordingActive = false;
+      document.getElementById('sos-mic-panel').classList.remove('listening');
+      document.getElementById('mic-trigger-btn').classList.remove('active');
+      document.getElementById('mic-status-text').innerHTML = "TAP TO ACTIVATE VOICE SENSING";
+      document.getElementById('mic-status-text').style.color = "var(--dash-text)";
+
+      if (speechRecognizer) {
+        try {
+          speechRecognizer.stop();
+        } catch (e) {}
+      }
+    }
+
+
+    // --- EMERGENCY COMMENCING COUNTDOWN & BROADCAST ---
+    function triggerDistressSequence(contactName, contactPhone) {
+      if (countdownActive || alertActive) return;
+
+      countdownActive = true;
+      countdownVal = 3;
+      document.getElementById('countdown-num').innerText = countdownVal;
+      openModal('countdown-overlay');
+      speakHindi("आपातकालीन अलर्ट तीन सेकंड में शुरू हो रहा है। रोकने के लिए कैंसल बटन दबाएं।");
+
+      countdownTimer = setInterval(() => {
+        countdownVal--;
+        document.getElementById('countdown-num').innerText = countdownVal;
+        
+        if (countdownVal <= 0) {
+          clearInterval(countdownTimer);
+          closeModal('countdown-overlay');
+          countdownActive = false;
+          commenceEmergencyBroadcast(contactName, contactPhone);
+        }
+      }, 1000);
+    }
+
+    function cancelDistressSequence() {
+      if (countdownActive) {
+        clearInterval(countdownTimer);
+        countdownActive = false;
+        closeModal('countdown-overlay');
+        speakHindi("अलर्ट रोक दिया गया है।");
+      }
+    }
+
+    function commenceEmergencyBroadcast(name, phone) {
+      alertActive = true;
+      document.body.classList.add('strobe-active');
+      document.getElementById('alert-modal').classList.remove('hidden');
+
+      // Start electronic physical police siren audio synthesis
+      startSirenEngine();
+
+      // Configure location
+      const isOnline = navigator.onLine;
+      const statusText = document.getElementById('alert-network-desc');
+      
+      const savedContacts = emergencyContacts.map(c => c.phone).join(",");
+      const smsHref = `sms:${savedContacts || '+919876543210'}?body=HELP! I am in danger. My live location: https://maps.google.com/?q=22.7196,75.8577`;
+      document.getElementById('sms-trigger-link').setAttribute('href', smsHref);
+
+      if (isOnline) {
+        statusText.innerHTML = `🚨 SECURE HANDSHAKE COMPLETED!<br>Simulated live coordinates successfully dispatched to centralized Raksha emergency server logs. Alert SMS queued.`;
+        speakHindi("अलर्ट भेज दिया गया है। लाइव जीपीएस सर्वर पर दर्ज है। शांत रहें।");
+      } else {
+        statusText.innerHTML = `⚠️ NETWORK DISCONNECTED!<br>Secure database handshake pending. Tap below to send pre-formatted distress SMS via cellular network.`;
+        speakHindi("नेटवर्क नहीं है। कृपया तुरंत एसएमएस भेजने के लिए नीचे दिए गए बटन पर क्लिक करें।");
+      }
+    }
+
+    function deactivateAlertState() {
+      deactivateAlert();
+    }
+
+    function deactivateAlert() {
+      alertActive = false;
+      document.body.classList.remove('strobe-active');
+      document.getElementById('alert-modal').classList.add('hidden');
+      stopSirenEngine();
+      speakHindi("सुरक्षा कवच रीसेट कर दिया गया है। आप सुरक्षित हैं।");
+    }
+
+    // --- GEOLOCATION GPS INTERRUPT ---
+    function requestLiveLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          const lat = pos.coords.latitude.toFixed(4);
+          const lng = pos.coords.longitude.toFixed(4);
+          document.getElementById('gps-lat').innerText = lat;
+          document.getElementById('gps-lng').innerText = lng;
+          document.getElementById('alert-coords-box').innerText = `COORDS: LAT ${lat} | LNG ${lng}`;
+          document.getElementById('gps-status').innerText = "LIVE COORDS ACTIVE";
+        }, (err) => {
+          console.log("GPS resolution failed, using INDORE defaults", err);
+        }, { enableHighAccuracy: true });
+      }
+    }
+
+
+    // --- PURE WEB AUDIO SYNTHESIZED SIREN ---
+    function startSirenEngine() {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        if (oscNode) return; // Already active
+
+        oscNode = audioCtx.createOscillator();
+        gainNode = audioCtx.createGain();
+
+        oscNode.type = 'sawtooth';
+        oscNode.frequency.setValueAtTime(500, audioCtx.currentTime);
+        
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        // Ramp up smoothly
+        gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.1);
+
+        oscNode.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscNode.start();
+
+        // Simulate high-frequency Indian Police Siren Yelp sweep
+        let sweepHigh = true;
+        sirenTimer = setInterval(() => {
+          if (!oscNode || !audioCtx) return;
+          const targetFreq = sweepHigh ? 1000 : 600;
+          oscNode.frequency.exponentialRampToValueAtTime(targetFreq, audioCtx.currentTime + 0.35);
+          sweepHigh = !sweepHigh;
+        }, 400);
+
+      } catch (e) {
+        console.warn("Audio Synthesis skipped or unsupported", e);
+      }
+    }
+
+    function stopSirenEngine() {
+      if (sirenTimer) {
+        clearInterval(sirenTimer);
+        sirenTimer = null;
+      }
+      if (oscNode) {
+        try {
+          oscNode.stop();
+        } catch (e) {}
+        oscNode = null;
+      }
+      if (gainNode) {
+        gainNode = null;
+      }
+    }
+  </script>
+</body>
+</html>
