@@ -1811,20 +1811,55 @@
     }
 
     // --- GEOLOCATION GPS INTERRUPT ---
-    function requestLiveLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-          const lat = pos.coords.latitude.toFixed(4);
-          const lng = pos.coords.longitude.toFixed(4);
-          document.getElementById('gps-lat').innerText = lat;
-          document.getElementById('gps-lng').innerText = lng;
-          document.getElementById('alert-coords-box').innerText = `COORDS: LAT ${lat} | LNG ${lng}`;
-          document.getElementById('gps-status').innerText = "LIVE COORDS ACTIVE";
-        }, (err) => {
-          console.log("GPS resolution failed, using INDORE defaults", err);
+    // --- GEOLOCATION GPS INTERRUPT (SAFE FALLBACK - BILINGUAL) ---
+function requestLiveLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (pos) {
+            var realLat = pos.coords.latitude.toFixed(4);
+            var realLng = pos.coords.longitude.toFixed(4);
+
+            if (typeof lat !== 'undefined') lat = realLat;
+            if (typeof lng !== 'undefined') lng = realLng;
+
+            // 1. Screen par real coordinates dikhao
+            document.getElementById('gps-lat').innerText = realLat;
+            document.getElementById('gps-lng').innerText = realLng;
+            document.getElementById('alert-coords-box').innerText = "COORDS: LAT " + realLat + " | LNG " + realLng;
+            document.getElementById('gps-status').innerText = "LIVE COORDS ACTIVE";
+
+            // 2. SUCCESS: Real Location Link (Hindi + English dono me)
+            var smsLinks = document.querySelectorAll('a');
+            smsLinks.forEach(function (link) {
+                if (link.href && link.href.indexOf('sms:') !== -1) {
+                    var mapUrl = "https://maps.google.com/?q=" + realLat + "," + realLng;
+                    
+                    // Dono languages ka combined message
+                    var msgText = "HELP! I am in danger. My live location: " + mapUrl + "\n\nबचाओ! मैं मुसीबत में हूँ। मेरी लाइव लोकेशन: " + mapUrl;
+                    
+                    link.href = "sms:7067306441,6232465634?body=" + encodeURIComponent(msgText);
+                }
+            });
+
+        }, function (err) {
+            console.log("GPS resolution failed. Handling safety fallback...");
+            
+            // 3. FAILURE: GPS band hone par bilingual urgent warning message
+            document.getElementById('gps-status').innerText = "GPS UNAVAILABLE (OFF)";
+            document.getElementById('alert-coords-box').innerText = "COORDS: GPS DISABLED";
+
+            var smsLinks = document.querySelectorAll('a');
+            smsLinks.forEach(function (link) {
+                if (link.href && link.href.indexOf('sms:') !== -1) {
+                    
+                    // GPS off hone par dono language me urgent text message
+                    var fallbackText = "HELP! My mobile GPS is OFF. Please call me immediately!\n\nबचाओ! मेरे मोबाइल का GPS बंद है। कृपया मुझे तुरंत कॉल करें!";
+                    
+                    link.href = "sms:7067306441,6232465634?body=" + encodeURIComponent(fallbackText);
+                }
+            });
         }, { enableHighAccuracy: true });
-      }
     }
+}
 
 
     // --- PURE WEB AUDIO SYNTHESIZED SIREN ---
