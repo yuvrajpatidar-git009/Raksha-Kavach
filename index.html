@@ -1879,6 +1879,28 @@
         gainNode = null;
       }
     }
+
+    // --- FIRST-TIME USER AUTO SETUP LOGIC ---
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Check karo ki kya local storage me koi emergency number save hai?
+    const hasSavedContacts = localStorage.getItem("guardianNumber") || localStorage.getItem("contacts");
+
+    // 2. Agar user naya hai (yani koi number saved nahi hai)
+    if (!hasSavedContacts) {
+        // Page load hone ke 1.5 seconds baad automatic setup modal open hoga
+        setTimeout(() => {
+            // Hum tumhare "stealth-settings" gear icon ko automatic click karwa rahe hain
+            const gearIcon = document.getElementById("stealth-settings");
+            
+            if (gearIcon) {
+                gearIcon.click(); // Automatic Click!
+                
+                // Naye user ke liye sweet alert message
+                alert("Welcome to Raksha Kavach! Apni safety ke liye pehle Papa aur Bhai ka number save karein, uske baad website automatic Stealth Mode me chali jayegi.");
+            }
+        }, 1500); 
+    }
+});
   </script>
 </body>
 </html>
