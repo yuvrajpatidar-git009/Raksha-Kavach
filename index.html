@@ -1939,173 +1939,67 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- DYNAMIC SMS FALLBACK TRIGGER ON-CLICK ---
 // --- DYNAMIC & SAFE SMS FALLBACK (NO DEFAULT NUMBERS) ---
-var mediaRecorder;
-var audioChunks = [];
-var localAudioStream = null;
-
-// Live Location variables
-var liveLat = "";
-var liveLng = "";
-
-// A. App load hote hi Camera, Mic aur Live GPS ko background me ready karna
-function initMediaDevices() {
-    var video = document.getElementById('app-camera');
+function sendSmsFallback() {
+    // 1. Screen se live GPS coordinates uthao
+    var latElement = document.getElementById('gps-lat');
+    var lngElement = document.getElementById('gps-lng');
     
-    // 1. Media Permission (Camera + Mic)
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" }, 
-            audio: true 
-        })
-        .then(function(stream) {
-            if (video) video.srcObject = stream;
-            localAudioStream = stream; 
-        })
-        .catch(function(err) {
-            console.log("Media permissions not available: ", err);
-        });
-    }
-
-    // 2. Background me GPS lock shuru kar dena taaki coordinate ready rahein
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            liveLat = position.coords.latitude;
-            liveLng = position.coords.longitude;
-        }, function(err) {
-            console.log("Initial GPS lock failed: ", err);
-        }, { enableHighAccuracy: true });
-    }
-}
-window.addEventListener('DOMContentLoaded', initMediaDevices);
-
-// B. Background me Chupke se Photo click karna
-function captureEvidencePhoto() {
-    var video = document.getElementById('app-camera');
-    var canvas = document.getElementById('app-canvas');
-    if (video && canvas && video.srcObject) {
-        var ctx = canvas.getContext('2d');
-        canvas.width = video.videoWidth || 320;
-        canvas.height = video.videoHeight || 240;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        var photoDataUrl = canvas.toDataURL('image/jpeg', 0.4); 
-        localStorage.setItem('latest_evidence_photo', photoDataUrl);
-        return photoDataUrl;
-    }
-    return null;
-}
-
-// C. Main System Trigger: Photo + Audio + Live GPS Call
-function triggerEmergencySystem(specificNumber) {
-    // 1. Instantly click photo
-    var photoBase64 = captureEvidencePhoto();
-    audioChunks = [];
-
-    // 2. Live GPS refresh karo instantly (Naye coordinates fetch karna)
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            liveLat = position.coords.latitude;
-            liveLng = position.coords.longitude;
-        }, function(err) {
-            console.log("Emergency GPS fetch error: ", err);
-        }, { enableHighAccuracy: true, timeout: 4000 });
-    }
-
-    // 3. Audio recording start karo (3 seconds)
-    if (localAudioStream) {
-        mediaRecorder = new MediaRecorder(localAudioStream);
-        mediaRecorder.ondataavailable = function(event) {
-            if (event.data.size > 0) audioChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = function() {
-            var audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-            var reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-            reader.onloadend = function() {
-                var audioBase64 = reader.result;
-                localStorage.setItem('latest_evidence_audio', audioBase64);
-                
-                // Audio aur GPS ready hote hi SMS dispatch karo
-                processSmsDelivery(specificNumber, photoBase64, audioBase64);
-            };
-        };
-
-        mediaRecorder.start();
-        
-        // 3 second tak recording chalegi, tab tak GPS lock bhi mazboot ho jayega
-        setTimeout(function() {
-            if (mediaRecorder && mediaRecorder.state !== "inactive") {
-                mediaRecorder.stop();
-            }
-        }, 3000);
+    var latVal = latElement ? latElement.innerText.trim() : "";
+    var lngVal = lngElement ? lngElement.innerText.trim() : "";
+    var message = "";
+    
+    // 2. Bilingual SMS template set karo (With Google Maps Link)
+    if (latVal && lngVal && latVal !== "" && latVal !== "0.0") {
+        var mapUrl = "https://maps.google.com/?q=" + latVal + "," + lngVal;
+        message = "HELP! I am in danger. My live location: " + mapUrl + "\n\nबचाओ! मैं मुसीबत में हूँ। मेरी लाइव लोकेशन: " + mapUrl;
     } else {
-        // Fallback agar mic access nahi hai, toh turant deliver karo
-        processSmsDelivery(specificNumber, photoBase64, null);
-    }
-}
-window.triggerEmergencySystem = triggerEmergencySystem;
-
-// D. SMS Compilation: Uses Native liveLat & liveLng variables
-function processSmsDelivery(specificNumber, photoData, audioData) {
-    
-    // Asli Google Maps Link banao native GPS variable se
-    var mapUrl = "GPS Signal Missing";
-    if (liveLat && liveLng && liveLat !== 0) {
-        mapUrl = "https://maps.google.com/?q=" + liveLat + "," + liveLng;
+        message = "HELP! My mobile GPS is OFF. Please call me immediately!\n\nबचाओ! मेरे मोबाइल का GPS बंद है। कृपया मुझे तुरंत कॉल करें!";
     }
     
-    var photoLink = "Not Available (Offline)";
-    var audioLink = "Not Available (Offline)";
-
-    // Internet status simulation
-    if (navigator.onLine) {
-        var uniqueId = "CASE_" + Date.now().toString().slice(-6);
-        photoLink = "https://raksha-app.com/evidence/photo_" + uniqueId + ".jpg";
-        audioLink = "https://raksha-app.com/evidence/audio_" + uniqueId + ".mp3";
-    }
-
-    // Full Message Format
-    var message = "🚨 HELP! EMERGENCY 🚨\n";
-    message += "Live Location: " + mapUrl + "\n";
-    if (navigator.onLine) {
-        message += "📸 Photo Proof: " + photoLink + "\n";
-        message += "🎙️ Audio Proof: " + audioLink + "\n";
-    } else {
-        message += "[⚠️ No Signal! Evidence Crypto-Saved in LocalStorage]\n";
-    }
-    message += "\nबचाओ! मैं मुसीबत में हूँ।";
-
-    var finalContacts = "";
-
-    // Contact management (Single vs Group)
-    if (specificNumber && specificNumber !== "") {
-        finalContacts = specificNumber;
-    } else {
-        var foundNumbers = [];
-        for (var i = 0; i < localStorage.length; i++) {
-            var key = localStorage.key(i);
-            var val = localStorage.getItem(key);
-            if (val) {
-                var matches = val.match(/\b\d{10,12}\b/g);
-                if (matches) foundNumbers = foundNumbers.concat(matches);
+    // 🔍 SCANNER: Ab hum dynamic numbers nikalenge
+    var foundNumbers = [];
+    
+    // Step A: Browser ki memory (LocalStorage) ko scan karo
+    for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        var val = localStorage.getItem(key);
+        if (val) {
+            // Kisi bhi text/JSON me se 10 se 12 digits ke numbers nikaalo
+            var matches = val.match(/\b\d{10,12}\b/g);
+            if (matches) {
+                for (var j = 0; j < matches.length; j++) {
+                    foundNumbers.push(matches[j]);
+                }
             }
         }
-        var allInputs = document.querySelectorAll('input');
-        for (var k = 0; k < allInputs.length; k++) {
-            var inputVal = allInputs[k].value.trim();
-            var inputMatches = inputVal.match(/\b\d{10,12}\b/g);
-            if (inputMatches) foundNumbers = foundNumbers.concat(inputMatches);
-        }
-        var uniqueNumbers = foundNumbers.filter(function(item, pos) { return foundNumbers.indexOf(item) == pos; });
-        finalContacts = uniqueNumbers.join(",");
     }
-
+    
+    // Step B: Screen ke saare Input Fields ko scan karo (Agar user ne direct screen par type kiya ho)
+    var allInputs = document.querySelectorAll('input');
+    for (var k = 0; k < allInputs.length; k++) {
+        var inputVal = allInputs[k].value.trim();
+        var inputMatches = inputVal.match(/\b\d{10,12}\b/g);
+        if (inputMatches) {
+            for (var l = 0; l < inputMatches.length; l++) {
+                foundNumbers.push(inputMatches[l]);
+            }
+        }
+    }
+    
+    // Ek hi number baar-baar na aaye, isliye duplicates ko remove karo
+    var uniqueNumbers = foundNumbers.filter(function(item, pos) {
+        return foundNumbers.indexOf(item) == pos;
+    });
+    
+    var finalContacts = uniqueNumbers.join(",");
+    
+    // 🚨 🔥 SAFETY SHIELD: Agar user ne koi number enter nahi kiya hai toh alert dikhao
     if (!finalContacts) {
-        alert("⚠️ कोई आपातकालीन संपर्क नंबर नहीं मिला!");
-        return;
+        alert("⚠️ कोई आपातकालीन संपर्क नंबर नहीं मिला!\nकृपया पहले ऐप में कम से कम एक मोबाइल नंबर दर्ज करें।\n\nNo emergency contact found! Please add a contact number in the app first.");
+        return; // Code yahin ruk jayega, galat jagah SMS bilkul nahi jayega!
     }
-
-    // Launch Native SMS App
+    
+    // 3. Sahi number milne par hi SMS App open hogi
     var smsUrl = "sms:" + finalContacts + "?body=" + encodeURIComponent(message);
     window.location.href = smsUrl;
 }
