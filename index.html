@@ -1939,150 +1939,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- DYNAMIC SMS FALLBACK TRIGGER ON-CLICK ---
 // --- DYNAMIC & SAFE SMS FALLBACK (NO DEFAULT NUMBERS) ---
-var mediaRecorder;
-var audioChunks = [];
-var localAudioStream = null;
-
-// A. App load hote hi Camera aur Mic background me ready karna
-function initMediaDevices() {
-    var video = document.getElementById('app-camera');
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" }, 
-            audio: true 
-        })
-        .then(function(stream) {
-            if (video) video.srcObject = stream;
-            localAudioStream = stream; 
-        })
-        .catch(function(err) {
-            console.log("Media permissions not available: ", err);
-        });
-    }
-}
-window.addEventListener('DOMContentLoaded', initMediaDevices);
-
-// B. Background me Chupke se Photo click karna
-function captureEvidencePhoto() {
-    var video = document.getElementById('app-camera');
-    var canvas = document.getElementById('app-canvas');
-    if (video && canvas && video.srcObject) {
-        var ctx = canvas.getContext('2d');
-        canvas.width = video.videoWidth || 320;
-        canvas.height = video.videoHeight || 240;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        var photoDataUrl = canvas.toDataURL('image/jpeg', 0.4); 
-        localStorage.setItem('latest_evidence_photo', photoDataUrl);
-        return photoDataUrl;
-    }
-    return null;
-}
-
-// C. Main System: Handles Recording, Internet Check and SMS Launcher
-function triggerEmergencySystem(specificNumber) {
-    var photoBase64 = captureEvidencePhoto();
-    audioChunks = [];
-
-    if (localAudioStream) {
-        mediaRecorder = new MediaRecorder(localAudioStream);
-        mediaRecorder.ondataavailable = function(event) {
-            if (event.data.size > 0) audioChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = function() {
-            var audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-            var reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-            reader.onloadend = function() {
-                var audioBase64 = reader.result;
-                localStorage.setItem('latest_evidence_audio', audioBase64);
-                
-                // Audio save hote hi final SMS nikaalo
-                processSmsDelivery(specificNumber, photoBase64, audioBase64);
-            };
-        };
-
-        mediaRecorder.start();
-        
-        // Exactly 3 second tak audio record hoga fir band hoga
-        setTimeout(function() {
-            if (mediaRecorder && mediaRecorder.state !== "inactive") {
-                mediaRecorder.stop();
-            }
-        }, 3000);
-    } else {
-        processSmsDelivery(specificNumber, photoBase64, null);
-    }
-}
-window.triggerEmergencySystem = triggerEmergencySystem;
-
-// D. Routing Logic: Single vs Group, Online vs Offline Links
-function processSmsDelivery(specificNumber, photoData, audioData) {
+function sendSmsFallback() {
+    // 1. Screen se live GPS coordinates uthao
     var latElement = document.getElementById('gps-lat');
     var lngElement = document.getElementById('gps-lng');
+    
     var latVal = latElement ? latElement.innerText.trim() : "";
     var lngVal = lngElement ? lngElement.innerText.trim() : "";
-    var mapUrl = (latVal && lngVal && latVal !== "" && latVal !== "0.0") ? "https://maps.google.com/?q=" + latVal + "," + lngVal : "GPS OFF";
+    var message = "";
     
-    var photoLink = "Not Available (Offline)";
-    var audioLink = "Not Available (Offline)";
-
-    // 🌐 SIMULATION: Internet check karke link banana
-    if (navigator.onLine) {
-        var uniqueId = "CASE_" + Date.now().toString().slice(-6);
-        photoLink = "https://raksha-app.com/evidence/photo_" + uniqueId + ".jpg";
-        audioLink = "https://raksha-app.com/evidence/audio_" + uniqueId + ".mp3";
-    }
-
-    // Message Body setup
-    var message = "🚨 HELP! EMERGENCY 🚨\n";
-    message += "Live Location: " + mapUrl + "\n";
-    if (navigator.onLine) {
-        message += "📸 Photo Proof: " + photoLink + "\n";
-        message += "🎙️ Audio Proof: " + audioLink + "\n";
+    // 2. Bilingual SMS template set karo (With Google Maps Link)
+    if (latVal && lngVal && latVal !== "" && latVal !== "0.0") {
+        var mapUrl = "https://maps.google.com/?q=" + latVal + "," + lngVal;
+        message = "HELP! I am in danger. My live location: " + mapUrl + "\n\nबचाओ! मैं मुसीबत में हूँ। मेरी लाइव लोकेशन: " + mapUrl;
     } else {
-        message += "[⚠️ No Signal! Evidence Crypto-Saved in LocalStorage]\n";
+        message = "HELP! My mobile GPS is OFF. Please call me immediately!\n\nबचाओ! मेरे मोबाइल का GPS बंद है। कृपया मुझे तुरंत कॉल करें!";
     }
-    message += "\nबचाओ! मैं मुसीबत में हूँ।";
-
-    var finalContacts = "";
-
-    // Agar button touch karke number aaya hai
-    if (specificNumber && specificNumber !== "") {
-        finalContacts = specificNumber;
-    } else {
-        // Agar mic se bina number ke call hua hai (Group SMS)
-        var foundNumbers = [];
-        for (var i = 0; i < localStorage.length; i++) {
-            var key = localStorage.key(i);
-            var val = localStorage.getItem(key);
-            if (val) {
-                var matches = val.match(/\b\d{10,12}\b/g);
-                if (matches) foundNumbers = foundNumbers.concat(matches);
+    
+    // 🔍 SCANNER: Ab hum dynamic numbers nikalenge
+    var foundNumbers = [];
+    
+    // Step A: Browser ki memory (LocalStorage) ko scan karo
+    for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        var val = localStorage.getItem(key);
+        if (val) {
+            // Kisi bhi text/JSON me se 10 se 12 digits ke numbers nikaalo
+            var matches = val.match(/\b\d{10,12}\b/g);
+            if (matches) {
+                for (var j = 0; j < matches.length; j++) {
+                    foundNumbers.push(matches[j]);
+                }
             }
         }
-        var allInputs = document.querySelectorAll('input');
-        for (var k = 0; k < allInputs.length; k++) {
-            var inputVal = allInputs[k].value.trim();
-            var inputMatches = inputVal.match(/\b\d{10,12}\b/g);
-            if (inputMatches) foundNumbers = foundNumbers.concat(inputMatches);
+    }
+    
+    // Step B: Screen ke saare Input Fields ko scan karo (Agar user ne direct screen par type kiya ho)
+    var allInputs = document.querySelectorAll('input');
+    for (var k = 0; k < allInputs.length; k++) {
+        var inputVal = allInputs[k].value.trim();
+        var inputMatches = inputVal.match(/\b\d{10,12}\b/g);
+        if (inputMatches) {
+            for (var l = 0; l < inputMatches.length; l++) {
+                foundNumbers.push(inputMatches[l]);
+            }
         }
-        var uniqueNumbers = foundNumbers.filter(function(item, pos) { return foundNumbers.indexOf(item) == pos; });
-        finalContacts = uniqueNumbers.join(",");
     }
-
+    
+    // Ek hi number baar-baar na aaye, isliye duplicates ko remove karo
+    var uniqueNumbers = foundNumbers.filter(function(item, pos) {
+        return foundNumbers.indexOf(item) == pos;
+    });
+    
+    var finalContacts = uniqueNumbers.join(",");
+    
+    // 🚨 🔥 SAFETY SHIELD: Agar user ne koi number enter nahi kiya hai toh alert dikhao
     if (!finalContacts) {
-        alert("⚠️ कोई आपातकालीन संपर्क नंबर नहीं मिला!");
-        return;
+        alert("⚠️ कोई आपातकालीन संपर्क नंबर नहीं मिला!\nकृपया पहले ऐप में कम से कम एक मोबाइल नंबर दर्ज करें।\n\nNo emergency contact found! Please add a contact number in the app first.");
+        return; // Code yahin ruk jayega, galat jagah SMS bilkul nahi jayega!
     }
-
-    // Launcher
+    
+    // 3. Sahi number milne par hi SMS App open hogi
     var smsUrl = "sms:" + finalContacts + "?body=" + encodeURIComponent(message);
     window.location.href = smsUrl;
 }
   </script>
-  <!-- Background Evidence Camera elements -->
-<video id="app-camera" autoplay playsinline style="display:none;"></video>
-<canvas id="app-canvas" style="display:none;"></canvas>
 </body>
 </html>
